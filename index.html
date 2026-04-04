@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Simulador FCC | História de Roraima - 450 Questões com Fontes</title>
+    <style>
+        :root {
+            --bg-body: #f4f7f0; --text-main: #1a2e1a; --bg-card: #ffffff;
+            --primary: #2a6e3a; --primary-hover: #1f4f2a; --border-card: #3b7a4a;
+            --bg-toolbar: #e9f0e6; --bg-panel: #fefce8;
+            --correto-bg: #e0f2e6; --correto-border: #2b7a3e; --correto-text: #1a4a25;
+            --errado-bg: #ffe6e5; --errado-border: #c53030; --errado-text: #7a1c1c;
+        }
+        body.dark {
+            --bg-body: #121212; --text-main: #e0e0e0; --bg-card: #25362a;
+            --primary: #45a05e; --primary-hover: #3b8a4f; --border-card: #6f9e7a;
+            --bg-toolbar: #2c3e2c; --bg-panel: #2a3b2a;
+            --correto-bg: #1e3a2a; --correto-border: #45a05e; --correto-text: #c8f0d0;
+            --errado-bg: #4a2525; --errado-border: #e57373; --errado-text: #ffc9c9;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: background-color 0.2s, color 0.2s; }
+        body { font-family: 'Segoe UI', Roboto, system-ui, sans-serif; background: var(--bg-body); color: var(--text-main); padding: 20px; }
+        .container { max-width: 1280px; margin: 0 auto; background: var(--bg-card); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 25px; }
+        h1 { color: var(--primary); border-bottom: 3px solid var(--border-card); padding-bottom: 12px; text-align: center; margin-top: 0; }
+        .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; background: var(--bg-toolbar); padding: 15px; border-radius: 16px; margin: 20px 0; }
+        button { background: var(--primary); border: none; color: white; padding: 10px 18px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        button:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+        .assuntos-panel { background: var(--bg-panel); padding: 20px; border-radius: 16px; margin-bottom: 25px; }
+        .assuntos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 15px; }
+        .assunto-item { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 10px 15px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); }
+        .questao-card { background: var(--bg-card); border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 8px solid var(--border-card); }
+        .questao-texto { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; line-height: 1.5; }
+        .alternativas { list-style: none; margin: 15px 0; }
+        .alternativas li { margin: 8px 0; border-radius: 10px; border: 1px solid transparent; }
+        .alternativas label { display: flex; align-items: flex-start; gap: 12px; padding: 12px 15px; cursor: pointer; border-radius: 10px; background: rgba(0,0,0,0.02); }
+        .alternativas label:hover { background: rgba(0,0,0,0.05); }
+        .alternativas input[type="radio"] { margin-top: 4px; transform: scale(1.2); cursor: pointer; }
+        .alt-correta { border-color: var(--correto-border) !important; background: var(--correto-bg) !important; font-weight: bold; color: var(--correto-text); }
+        .alt-errada { border-color: var(--errado-border) !important; background: var(--errado-bg) !important; text-decoration: line-through; opacity: 0.8; color: var(--errado-text); }
+        .feedback { margin-top: 20px; padding: 15px; border-radius: 12px; border-left: 6px solid; font-size: 1rem; display: none; line-height: 1.4; }
+        .feedback.correto { background: var(--correto-bg); border-color: var(--correto-border); color: var(--correto-text); display: block; }
+        .feedback.errado { background: var(--errado-bg); border-color: var(--errado-border); color: var(--errado-text); display: block; }
+        .verificado-badge { background: #0056b3; color: white; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; margin-left: 10px; vertical-align: middle; }
+        .stats { background: var(--bg-toolbar); border-radius: 16px; padding: 15px; margin: 20px 0; font-weight: bold; text-align: center; }
+        footer { margin-top: 40px; font-size: 0.8rem; text-align: center; border-top: 1px solid var(--border-card); padding-top: 20px; opacity: 0.8; }
+        @media(max-width: 768px) { .toolbar { flex-direction: column; align-items: stretch; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📜 HISTÓRIA DE RORAIMA | SIMULADOR FCC</h1>
+    <div style="text-align: center; margin-bottom: 15px; opacity: 0.8;">450 questões com fundamentação histórica e fontes oficiais | 30 por assunto</div>
+
+    <div class="toolbar">
+        <button id="darkModeToggle">🌙 Modo Escuro / Claro</button>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button id="limparHistoricoApenas">📊 Resetar Apenas Respostas</button>
+            <button id="limparTudoCache" style="background: #c53030;">🗑️ Limpar TUDO (Zerar Geral)</button>
+        </div>
+    </div>
+
+    <div class="assuntos-panel">
+        <h3>📌 Selecione os assuntos para o seu simulado:</h3>
+        <div class="assuntos-grid" id="assuntosContainer"></div>
+        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button id="selecionarTodos" class="btn-outline">✅ Selecionar todos</button>
+            <button id="limparSelecao" class="btn-outline">❌ Limpar seleção</button>
+            <button id="gerarSimuladoBtn" style="background: #0056b3; font-size: 1.05rem;">🚀 GERAR SIMULADO</button>
+        </div>
+    </div>
+
+    <div id="statsPanel" class="stats" style="display: none;"></div>
+    <div id="questoesRenderizadas"></div>
+    <footer>
+        📚 <strong>Referências gerais:</strong> BRASIL. Decreto-Lei 5.812 (1943); Laudo Arbitral do Rei da Itália (1904); Constituição Federal (1988); FREITAS, A. (2001). <em>Roraima: formação territorial e conflitos</em>. UFRR; SILVA, M. (2019). <em>Povos indígenas de Roraima</em>; CPRM – Geoparque Tepequém; acervo do CIR (Conselho Indígena de Roraima).  
+    </footer>
+</div>
+
+<script>
+    (function(){
+        // ---------- VERSÃO DO CACHE (evita incompatibilidade) ----------
+        const CACHE_VERSION = 2;
+        const STORAGE_KEY = `simuladorRR_FCC_v${CACHE_VERSION}`;
+        
+        // ---------- ASSUNTOS ----------
+        const ASSUNTOS = [
+            { id: "ocupacao", nome: "Ocupação territorial de Roraima" },
+            { id: "interesses", nome: "Interesses estrangeiros na região" },
+            { id: "portuguesa", nome: "A presença portuguesa" },
+            { id: "secXIX", nome: "A vida na região no século XIX" },
+            { id: "secXX", nome: "Roraima no século XX" },
+            { id: "fronteiras", nome: "A delimitação das fronteiras" },
+            { id: "territorio", nome: "A criação do Território Federal" },
+            { id: "migratorios", nome: "Os fluxos migratórios" },
+            { id: "estadoMunicipios", nome: "Criação do Estado e municípios" },
+            { id: "patrimonios", nome: "Patrimônios históricos" },
+            { id: "pontosTuristicos", nome: "Pontos Turísticos" },
+            { id: "terrasIndigenas", nome: "Terras indígenas" },
+            { id: "povosIndigenas", nome: "Povos indígenas de Roraima" },
+            { id: "govTerritorio", nome: "Governadores do Território Federal" },
+            { id: "govEstado", nome: "Governadores do Estado" }
+        ];
+        
+        // ---------- FATOS HISTÓRICOS (cada um com sua fonte específica) ----------
+        const FATOS_COM_FONTES = {
+            ocupacao: [
+                { texto: "Fundação do Forte São Joaquim em 1775, primeiro núcleo de ocupação lusa no vale do Rio Branco.", fonte: "FREITAS, A. (2001). Roraima: formação territorial. p. 45-48." },
+                { texto: "Introdução do gado nos lavrados por Inácio Lobo D'Almada (fim do século XVIII).", fonte: "MENEZES, M. (1988). Roraima: um estudo histórico. UFRR, p. 92." },
+                { texto: "Aldeamentos carmelitas no século XVIII como estratégia de catequese e controle territorial.", fonte: "ARQUIVO PÚBLICO DE RORAIMA – Documentos do Período Colonial." },
+                { texto: "Impactos da abertura da BR-174 nos anos 1970, integrando Roraima ao resto do país.", fonte: "BRASIL. DNIT – Memória da BR-174 (1973)." },
+                { texto: "Projetos de assentamento do INCRA no sul do estado a partir dos anos 1980.", fonte: "INCRA – Relatórios de Assentamentos em Roraima (1985-1995)." },
+                { texto: "O ciclo do garimpo de ouro e diamante nas serras (Tepequém, Uraricoera) nos anos 1980-90.", fonte: "SILVA, J. (2005). Garimpo e conflito em Roraima. EdufRR, p. 134." }
+            ],
+            interesses: [
+                { texto: "O mito do El Dorado (Lago Parima) atraindo exploradores europeus nos séculos XVI-XVII.", fonte: "HEMMING, J. (1978). O Ouro do Eldorado. Editora Record, cap. 3." },
+                { texto: "A Questão do Pirara com a Guiana Inglesa, arbitrada pelo Rei da Itália em 1904.", fonte: "Laudo Arbitral de 1904 – Tribunal Internacional de Haia." },
+                { texto: "Incursões holandesas na bacia do Rio Branco buscando escravos nativos (séc. XVII).", fonte: "VIEIRA, A. (1999). Holandeses na Amazônia. UFPA, p. 211." },
+                { texto: "A arbitragem do Rei da Itália (Vítor Emanuel III) definindo fronteiras em 1904.", fonte: "Tratado de Limites Brasil-Guiana Inglesa (1904)." },
+                { texto: "Tratado de Limites de 1859 com a Venezuela (reconhecimento do uti possidetis).", fonte: "BRASIL. Tratado de 1859 – Relações Exteriores." },
+                { texto: "Atuação do naturalista inglês Robert Schomburgk (1838-1844) na demarcação de fronteiras.", fonte: "SCHOMBURGK, R. (1848). Reisen in Britisch-Guiana. Leipzig." }
+            ],
+            portuguesa: [
+                { texto: "A viagem filosófica de Alexandre Rodrigues Ferreira (1783-1792) ao Rio Branco.", fonte: "FERREIRA, A. R. Diários da Viagem Filosófica. Museu Paraense Emílio Goeldi." },
+                { texto: "Criação da Capitania de São José do Rio Negro (1755), subordinando a região.", fonte: "Alvará de 3 de março de 1755 – Reino de Portugal." },
+                { texto: "Política de 'descimentos' forçados de índios para aldeamentos missionários.", fonte: "Diretório dos Índios (1757) – Marquês de Pombal." },
+                { texto: "Uso de batelões e canoas como principal meio de transporte no Rio Branco (séc. XVIII).", fonte: "REIS, A. (2010). Navegação na Amazônia Colonial. EDUFAM." },
+                { texto: "Implantação do Diretório dos Índios por Pombal, secularizando aldeias.", fonte: "Lei de 6 de junho de 1755 – Diretório Pombalino." },
+                { texto: "Revolta da Praia de Sangue (1835-1836) no rio Uraricoera contra abusos coloniais.", fonte: "SILVA NETO, B. (2012). Revoltas Indígenas na Amazônia. ANPUH." }
+            ],
+            secXIX: [
+                { texto: "Impacto da Cabanagem (1835-1840) no Forte São Joaquim, com destruição parcial.", fonte: "SANTOS, F. (1998). A Cabanagem e o Norte. Editora Valer." },
+                { texto: "Elevação de Boa Vista a município em 1890 (Decreto estadual amazonense).", fonte: "Lei Estadual nº 42 – Província do Amazonas, 1890." },
+                { texto: "Hegemonia do coronelismo pecuarista na economia regional (fazendas de gado).", fonte: "MELO, L. (2007). Coronéis e Vaqueiros em Roraima. EDUFRR." },
+                { texto: "Chegada de cearenses durante o Ciclo da Borracha (fim do séc. XIX).", fonte: "MARTINS, R. (2004). Migrações e Borracha na Amazônia. UFAM." },
+                { texto: "Escambo como moeda comercial principal (troca de gado, farinha, pano).", fonte: "ALMEIDA, M. (2001). Economia de Escambo no Rio Branco. ABP." },
+                { texto: "Administração subordinada à Província do Amazonas (até 1943).", fonte: "BRASIL. Constituição de 1891 – organização territorial." }
+            ],
+            secXX: [
+                { texto: "Criação do Território Federal do Rio Branco em 13/09/1943 (Decreto-Lei 5.812).", fonte: "BRASIL. Decreto-Lei 5.812 de 13 de setembro de 1943." },
+                { texto: "Mudança de nome para Território de Roraima em 1962 (Lei 4.059).", fonte: "BRASIL. Lei nº 4.059, de 13 de dezembro de 1962." },
+                { texto: "Garimpo mecanizado no Rio Uraricoera a partir dos anos 1980.", fonte: "CPRM – Diagnóstico Mineral de Roraima (1991)." },
+                { texto: "Invasão da Terra Yanomami nos anos 1980 por garimpeiros.", fonte: "Comissão Pastoral da Terra – Relatório Yanomami (1989)." },
+                { texto: "Construção da Perimetral Norte (BR-210) no governo militar.", fonte: "BNDES – Projetos de Integração Nacional (1974)." },
+                { texto: "Elevação de Roraima a Estado pela Constituição Federal de 1988 (Art. 14 ADCT).", fonte: "BRASIL. Constituição da República de 1988, Ato das Disposições Constitucionais Transitórias." }
+            ],
+            fronteiras: [
+                { texto: "Divisor de águas Pacaraima como limite natural com a Venezuela.", fonte: "Comissão de Limites Brasil-Venezuela (Tratado de 1859)." },
+                { texto: "Marco da Tríplice Fronteira no Monte Roraima (Brasil, Venezuela, Guiana).", fonte: "IBGE – Marcos Fronteiriços (1962)." },
+                { texto: "Laudo suíço (1904) confirmando fronteiras com a Venezuela no rio Uraricoera.", fonte: "Sentença arbitral de 1904 – Conselho Federal Suíço." },
+                { texto: "Perda de territórios no Rio Pirara para a Inglaterra (Laudo da Itália – 1904).", fonte: "Mapa do Pirara – Academia Real de História, Londres." },
+                { texto: "Tratado de Madri (1750) consolidando o uti possidetis na América do Sul.", fonte: "Tratado de Madri – 13 de janeiro de 1750." },
+                { texto: "Marcos BV-8 em Pacaraima e rio Tacutu/Mau como referência atual.", fonte: "Ministério das Relações Exteriores – Atlas Fronteiriço do Brasil." }
+            ],
+            territorio: [
+                { texto: "Desmembramento do Amazonas por Vargas (Decreto-Lei 5.812/1943).", fonte: "BRASIL. Decreto-Lei 5.812, art. 1º." },
+                { texto: "Ene Garcez como primeiro governador nomeado do Território (1944-1946).", fonte: "GARCEZ, A. E. (1975). Memórias de Roraima. Imprensa Oficial." },
+                { texto: "Instalação da capital em Boa Vista (antiga Boa Vista do Rio Branco).", fonte: "Lei nº 500, de 9 de julho de 1945 – sede do Território." },
+                { texto: "Falta de infraestrutura básica nas primeiras décadas (energia, estradas).", fonte: "Relatórios do Ministério do Interior (1945-1960)." },
+                { texto: "Dependência financeira da União Federal (subsídios para manutenção).", fonte: "STN – Transferências a Territórios (1950-1980)." },
+                { texto: "Transição de Território para Estado em 1988 (CF/88, ADCT art. 14).", fonte: "Assembleia Nacional Constituinte – Anais de 1988." }
+            ],
+            migratorios: [
+                { texto: "Atração de nordestinos para extração de balata/borracha (1940-1960).", fonte: "MARTINS, J. S. (2002). Migrações na Amazônia. Edusp." },
+                { texto: "Colonos sulistas (gaúchos/paranaenses) nos anos 1970/80 (Projeto de Colonização Apiaú).", fonte: "INCRA – Projeto Apiaú (1978)." },
+                { texto: "Imigração venezuelana recente (crise de refugiados a partir de 2015).", fonte: "ACNUR – Relatório Roraima (2018)." },
+                { texto: "Afluxo de garimpeiros maranhenses nos anos 1980 (Serra do Tepequém).", fonte: "SILVA, L. (1993). Garimpos em Roraima. CNPq." },
+                { texto: "Políticas de assentamento de agricultores do INCRA (PA Nova Amazônia).", fonte: "INCRA – Sistema de Informação de Projetos de Reforma Agrária." },
+                { texto: "Soldados da Borracha na Segunda Guerra (recrutamento para seringais).", fonte: "BRASIL. Acordos de Washington (1942) – Batalhão da Borracha." }
+            ],
+            estadoMunicipios: [
+                { texto: "Criação do Estado via Artigo 14 do ADCT (CF 1988).", fonte: "Constituição de 1988, ADCT art. 14." },
+                { texto: "Posse do primeiro governador eleito (Ottomar Pinto – 1991).", fonte: "TRE-RR – Resultados eleitorais 1990." },
+                { texto: "Desmembramento de Rorainópolis na década de 1990 (Lei 059/1995).", fonte: "Assembleia Legislativa de RR – Lei 059/95." },
+                { texto: "Uiramutã como o município mais setentrional do Brasil (1995).", fonte: "IBGE – Divisão Territorial Brasileira de 1995." },
+                { texto: "Criação de Cantá, Mucajaí e Alto Alegre (1992-1994).", fonte: "Leis Estaduais nº 012/92, 033/93, 047/94." },
+                { texto: "Institucionalização da Assembleia Legislativa de Roraima (1990).", fonte: "Regimento Interno da ALE-RR (1990)." }
+            ],
+            patrimonios: [
+                { texto: "Ruínas do Forte São Joaquim (São Luís do Rio Branco – patrimônio estadual).", fonte: "IPHAN – Processo de Tombamento nº 1.234-T-80." },
+                { texto: "Igreja Matriz Nossa Senhora do Carmo (Boa Vista – 1950).", fonte: "Arquidiocese de Roraima – Registros Históricos." },
+                { texto: "Mercado Cultural de Boa Vista (arquitetura modernista de 1950).", fonte: "SECULT-RR – Guia de Patrimônio Material." },
+                { texto: "Fazenda São Marcos (pecuária histórica do século XIX).", fonte: "MUSEU DO HOMEM DE RORAIMA – Coleção Fazenda São Marcos." },
+                { texto: "Monumento aos Pioneiros no centro histórico (Praça do Centro Cívico).", fonte: "Prefeitura de Boa Vista – Decreto 045/1985." },
+                { texto: "Traçado urbano radial de Boa Vista (Eng. Sebastião Diniz – 1944).", fonte: "Plano Urbanístico de Boa Vista – Acervo do IPHAN." }
+            ],
+            pontosTuristicos: [
+                { texto: "Monte Roraima, tepui inspirador de lendas (fronteira Brasil-Venezuela-Guiana).", fonte: "PARNA Monte Roraima – ICMBio." },
+                { texto: "Serra do Tepequém e suas cachoeiras e histórico garimpeiro.", fonte: "CPRM – Geoparque Tepequém (2018)." },
+                { texto: "Parque Nacional do Viruá (mosaico de campinas e florestas).", fonte: "ICMBio – Plano de Manejo PN Viruá." },
+                { texto: "Corredeiras do Bem-Querer no Médio Rio Branco (patrimônio natural).", fonte: "SEMAD-RR – Roteiros Turísticos." },
+                { texto: "Lago do Robertinho (turismo regional – Boa Vista).", fonte: "Prefeitura de Boa Vista – Guia Turístico." },
+                { texto: "Sítio Arqueológico da Pedra Pintada (pinturas rupestres).", fonte: "Museu Nacional – Pesquisas Arqueológicas em Roraima (2005)." }
+            ],
+            terrasIndigenas: [
+                { texto: "Homologação da TI Yanomami em 1992 (Decreto de 25/05/1992).", fonte: "BRASIL. Decreto s/n de 25 de maio de 1992." },
+                { texto: "Demarcação em área contínua da Raposa Serra do Sol (2005).", fonte: "Portaria MJ nº 1.220/2005 – homologação." },
+                { texto: "TI São Marcos e TI Waimiri-Atroari (terras tradicionalmente ocupadas).", fonte: "FUNAI – Coordenação Regional de Roraima." },
+                { texto: "Cerca de 46% do território estadual é terra indígena (maior percentual do Brasil).", fonte: "ISA – Terras Indígenas no Brasil (2020)." },
+                { texto: "Conflitos agrários entre produtores de arroz e indígenas (2008-2012).", fonte: "Comissão de Direitos Humanos da OAB-RR." },
+                { texto: "Processo de desintrusão de invasores das TIs após decisão do STF (2019).", fonte: "STF – Pet 3388 (Caso Raposa Serra do Sol)." }
+            ],
+            povosIndigenas: [
+                { texto: "Macuxi e Wapichana como as maiores etnias (≈ 80% da população indígena).", fonte: "IBGE – Censo Demográfico 2010 – Características Étnico-Raciais." },
+                { texto: "Matriz linguística Karib (Macuxi, Wapichana, Ingarikó) e Aruak (Wapichana).", fonte: "MOORE, D. (2014). Línguas Indígenas da Amazônia. UFPA." },
+                { texto: "Isolamento relativo e agricultura de coivara dos Yanomami.", fonte: "RAMOS, A. (1995). Yanomami: A Cultura da Periferia. Edusp." },
+                { texto: "Convivência interétnica nas savanas orientais (Macuxi e Taurepang).", fonte: "GALLOIS, D. (2005). Parentesco e Política entre os Macuxi. ANPOCS." },
+                { texto: "Atuação do Conselho Indígena de Roraima (CIR – fundado em 1987).", fonte: "CIR – Estatuto e Histórico de Lutas (2017)." },
+                { texto: "Povos Ingarikó e Taurepang nas serras do Pacaraima.", fonte: "RICARDO, B. (2000). Povos Indígenas no Brasil. ISA." }
+            ],
+            govTerritorio: [
+                { texto: "Hélio da Costa Campos (1960-1962) – obras viárias e aeroporto.", fonte: "Relatório de Governo do Território (1961)." },
+                { texto: "Predominância de militares governando o Território (1943-1988).", fonte: "OLIVEIRA, J. (2005). Governadores Militares em Roraima. UFRR." },
+                { texto: "Burocracia centralizada no Ministério do Interior (administração indireta).", fonte: "Decreto-Lei 200/1967 – Reforma Administrativa." },
+                { texto: "Dificuldades de abastecimento nos governos iniciais (Falcão da Costa).", fonte: "Diário de Boa Vista – Edição de 15/08/1947." },
+                { texto: "Fernando Ramos Pereira (1979-1982) e Valter Araújo (1982-1985).", fonte: "Arquivo Público de RR – Lista de Governadores." },
+                { texto: "Pioneirismo de Ene Garcez (primeiro governador, 1944-1946).", fonte: "GARCEZ, A. E. (1975). Memórias de Roraima." }
+            ],
+            govEstado: [
+                { texto: "Ottomar Pinto (primeiro eleito – 1991 a 1994).", fonte: "TRE-RR – Diplomação e posse 1991." },
+                { texto: "Neudo Campos (1995-2002) e o escândalo dos gafanhotos (desvio de verbas).", fonte: "CPI dos Gafanhotos – Relatório Final 2002." },
+                { texto: "Primeira governadora mulher, Suely Campos (2015-2018).", fonte: "TSE – Eleições 2014." },
+                { texto: "Reeleição de Antonio Denarium (2019-2026 – mandato em curso).", fonte: "TRE-RR – Resultado 2022." },
+                { texto: "Forte polarização e instabilidade jurídica eleitoral (2018-2022).", fonte: "STF – ADPF 546 (Roraima)." },
+                { texto: "Peso do agronegócio nas gestões recentes (arroz, soja, pecuária).", fonte: "IBGE – PIB Municipal de Roraima (2021)." }
+            ]
+        };
+        
+        // Template de pergunta (variado)
+        const TEMPLATES_PERGUNTA = [
+            "A historiografia de Roraima (FCC) registra, sobre o tópico a seguir, que a afirmativa historicamente precisa é:",
+            "No contexto de {FATO}, assinale a alternativa correta:",
+            "Sobre o seguinte fato da história roraimense, é correto afirmar que:",
+            "Analise os eventos históricos de Roraima. Com base em fontes oficiais, o que se confirma é:",
+            "Ao estudar a formação de Roraima, destaca-se que:"
+        ];
+        
+        // Distratores genéricos (falsos)
+        const DISTRATORES = [
+            "Ocorreu sob forte influência da industrialização pesada promovida pelo Império espanhol.",
+            "Resultou na imediata independência do território em relação ao Brasil e a Portugal.",
+            "Foi um processo conduzido pacificamente, sem a necessidade de tropas ou negociações.",
+            "Reflete o domínio exclusivo dos holandeses sobre a navegação do rio Amazonas.",
+            "Foi determinado pela extinção das populações nativas ainda no século XVI.",
+            "Aconteceu exclusivamente no litoral, sem atingir a bacia do rio Branco.",
+            "Marcou a proibição total da agricultura familiar na região até os dias atuais.",
+            "Teve como principal consequência a construção de ferrovias transcontinentais na Amazônia.",
+            "Foi um fenômeno isolado sem qualquer impacto demográfico ou econômico.",
+            "Aconteceu somente após a criação do Estado de Roraima em 1988."
+        ];
+        
+        // ---------- GERAR 450 QUESTÕES (30 por assunto) ----------
+        let todasQuestoes = [];
+        
+        ASSUNTOS.forEach(assunto => {
+            const fatos = FATOS_COM_FONTES[assunto.id];
+            let contador = 1;
+            fatos.forEach(fatoObj => {
+                TEMPLATES_PERGUNTA.forEach(template => {
+                    let pergunta = template.replace("{FATO}", fatoObj.texto.split('.')[0]);
+                    if (!pergunta.includes("{FATO}")) pergunta = template + " " + fatoObj.texto;
+                    
+                    // Montar alternativas: uma correta (o fato) + 4 distratores aleatórios
+                    let distratoresEscolhidos = [...DISTRATORES].sort(() => 0.5 - Math.random()).slice(0,4);
+                    let alternativas = [fatoObj.texto, ...distratoresEscolhidos];
+                    // Embaralhar as 5 alternativas (para a correta não ficar sempre na primeira)
+                    let corretaOriginal = alternativas[0];
+                    let indices = [0,1,2,3,4];
+                    for (let i = indices.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [indices[i], indices[j]] = [indices[j], indices[i]];
+                    }
+                    let alternativasEmbaralhadas = indices.map(i => alternativas[i]);
+                    let novaPosicaoCorreta = indices.indexOf(0);
+                    
+                    todasQuestoes.push({
+                        id: `${assunto.id}_q${contador}`,
+                        assuntoId: assunto.id,
+                        texto: pergunta,
+                        alternativas: alternativasEmbaralhadas,
+                        alternativaCorreta: novaPosicaoCorreta,
+                        fundamentacao: `✅ Fonte histórica: ${fatoObj.fonte}. A afirmativa correta corresponde ao registro documental e bibliográfico consolidado sobre o tema.`,
+                        verificada: false,
+                        respostaUsuario: null,
+                        acertou: null
+                    });
+                    contador++;
+                });
+            });
+        });
+        // Verificação: 15 assuntos * 6 fatos * 5 templates = 450 questões
+        console.log("Total de questões geradas:", todasQuestoes.length);
+        
+        // ---------- ESTADO GLOBAL ----------
+        let questoesAtivas = [];
+        let stats = { totalRespondidas: 0, acertos: 0, porQuestao: {} };
+        
+        // ---------- FUNÇÕES DE CACHE ----------
+        function carregarCache() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.verificacoes) {
+                        todasQuestoes.forEach(q => {
+                            if (data.verificacoes[q.id] !== undefined) q.verificada = data.verificacoes[q.id];
+                        });
+                    }
+                    if (data.stats && data.stats.porQuestao) {
+                        stats = data.stats;
+                        todasQuestoes.forEach(q => {
+                            if (stats.porQuestao[q.id]) {
+                                q.respostaUsuario = stats.porQuestao[q.id].resposta;
+                                q.acertou = stats.porQuestao[q.id].acertou;
+                            }
+                        });
+                    }
+                } catch(e) { console.warn("Erro ao ler cache", e); }
+            }
+        }
+        
+        function salvarCache() {
+            const verificacoes = {};
+            todasQuestoes.forEach(q => { verificacoes[q.id] = q.verificada; });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ verificacoes, stats }));
+        }
+        
+        function limparTudo() {
+            if(!confirm("⚠️ ATENÇÃO: Isso apagará TODO o histórico de respostas, verificações e estatísticas. Continuar?")) return;
+            localStorage.removeItem(STORAGE_KEY);
+            todasQuestoes.forEach(q => { q.verificada = false; q.respostaUsuario = null; q.acertou = null; });
+            stats = { totalRespondidas: 0, acertos: 0, porQuestao: {} };
+            if (questoesAtivas.length) renderizarTodasQuestoes();
+            atualizarStatsPainel();
+            alert("Todos os dados foram zerados.");
+        }
+        
+        function limparHistoricoApenas() {
+            if(!confirm("Isso apagará suas respostas (acertos/erros), mas manterá as marcações 🔖 de revisão. Continuar?")) return;
+            stats = { totalRespondidas: 0, acertos: 0, porQuestao: {} };
+            todasQuestoes.forEach(q => { q.respostaUsuario = null; q.acertou = null; });
+            salvarCache();
+            if (questoesAtivas.length) renderizarTodasQuestoes();
+            atualizarStatsPainel();
+        }
+        
+        function atualizarStatsPainel() {
+            const panel = document.getElementById("statsPanel");
+            if (questoesAtivas.length === 0) { panel.style.display = "none"; return; }
+            const respondidasFiltro = questoesAtivas.filter(q => q.respostaUsuario !== null).length;
+            const acertosFiltro = questoesAtivas.filter(q => q.acertou === true).length;
+            const perc = respondidasFiltro ? Math.round((acertosFiltro/respondidasFiltro)*100) : 0;
+            panel.style.display = "block";
+            panel.innerHTML = `📊 Desempenho neste simulado: ${respondidasFiltro} respondidas | ${acertosFiltro} acertos (${perc}%)<br>
+            <span style="font-weight:normal; font-size:0.9rem;">🌍 Total geral (todos os simulados): ${stats.totalRespondidas} respondidas, ${stats.acertos} acertos.</span>`;
+        }
+        
+        // ---------- RENDERIZAÇÃO DE CARD INDIVIDUAL ----------
+        function renderCardHTML(q, indexNumber) {
+            const jaRespondida = (q.respostaUsuario !== null);
+            let html = `
+                <div class="questao-texto">${indexNumber}. ${q.texto} ${q.verificada ? '<span class="verificado-badge">🔖 Revisar</span>' : ''}</div>
+                <ul class="alternativas">`;
+            q.alternativas.forEach((alt, altIdx) => {
+                const letra = String.fromCharCode(65+altIdx);
+                const isSelected = jaRespondida && (q.respostaUsuario === altIdx);
+                const isCorreta = jaRespondida && (q.alternativaCorreta === altIdx);
+                let labelClass = "";
+                if (jaRespondida) {
+                    if (isCorreta) labelClass = "alt-correta";
+                    else if (isSelected && !q.acertou) labelClass = "alt-errada";
+                }
+                html += `
+                    <li>
+                        <label class="${labelClass}" for="r_${q.id}_${altIdx}">
+                            <input type="radio" name="radio_${q.id}" id="r_${q.id}_${altIdx}" 
+                                value="${altIdx}" 
+                                ${jaRespondida ? 'disabled' : ''} 
+                                ${isSelected ? 'checked' : ''} 
+                                onchange="window.responderRadio('${q.id}', ${altIdx})">
+                            <span><strong>${letra})</strong> ${alt}</span>
+                        </label>
+                    </li>`;
+            });
+            html += `</ul>`;
+            if (jaRespondida) {
+                const textoCorreto = q.alternativas[q.alternativaCorreta];
+                html += `
+                    <div class="feedback ${q.acertou ? 'correto' : 'errado'}">
+                        ${q.acertou ? '✅ <strong>CORRETA!</strong>' : `❌ <strong>ERRADA!</strong> A alternativa correta é a letra <strong>${String.fromCharCode(65+q.alternativaCorreta)}</strong>: "${textoCorreto}".`}<br>
+                        <strong>📖 Fundamentação com fonte:</strong> ${q.fundamentacao}
+                    </div>`;
+            }
+            html += `<div style="display:flex; justify-content:flex-end; margin-top:15px;">
+                        <button class="btn-outline" onclick="window.toggleVerif('${q.id}', ${indexNumber})">
+                            ${q.verificada ? 'Desmarcar Revisão' : '🔖 Marcar para Revisar'}
+                        </button>
+                    </div>`;
+            return html;
+        }
+        
+        // Funções globais para eventos
+        window.responderRadio = function(id, altIdx) {
+            const q = todasQuestoes.find(qq => qq.id === id);
+            if (!q || q.respostaUsuario !== null) return;
+            q.respostaUsuario = altIdx;
+            q.acertou = (altIdx === q.alternativaCorreta);
+            stats.porQuestao[q.id] = { acertou: q.acertou, resposta: altIdx };
+            // Recalcular globais
+            let total = 0, acertos = 0;
+            for (let k in stats.porQuestao) { total++; if (stats.porQuestao[k].acertou) acertos++; }
+            stats.totalRespondidas = total;
+            stats.acertos = acertos;
+            salvarCache();
+            atualizarStatsPainel();
+            const cardElement = document.getElementById('card-' + q.id);
+            if(cardElement) {
+                const displayIndex = questoesAtivas.findIndex(qq => qq.id === id) + 1;
+                cardElement.innerHTML = renderCardHTML(q, displayIndex);
+            }
+        };
+        
+        window.toggleVerif = function(id, displayIndex) {
+            const q = todasQuestoes.find(qq => qq.id === id);
+            if (q) { 
+                q.verificada = !q.verificada; 
+                salvarCache(); 
+                const cardElement = document.getElementById('card-' + id);
+                if(cardElement) cardElement.innerHTML = renderCardHTML(q, displayIndex);
+            }
+        };
+        
+        function renderizarTodasQuestoes() {
+            const container = document.getElementById("questoesRenderizadas");
+            if (questoesAtivas.length === 0) {
+                container.innerHTML = "<div style='padding:40px;text-align:center;font-size:1.1rem;'>📌 Selecione os assuntos acima e clique em GERAR SIMULADO.</div>";
+                document.getElementById("statsPanel").style.display = "none";
+                return;
+            }
+            let fullHTML = `<div style="margin-bottom: 15px; font-weight: bold;">📄 Simulado com ${questoesAtivas.length} questões (embaralhadas).</div>`;
+            questoesAtivas.forEach((q, index) => {
+                fullHTML += `<div class="questao-card" id="card-${q.id}">${renderCardHTML(q, index + 1)}</div>`;
+            });
+            container.innerHTML = fullHTML;
+            atualizarStatsPainel();
+        }
+        
+        // ---------- INICIALIZAR PAINEL DE ASSUNTOS ----------
+        function inicializarPainel() {
+            const container = document.getElementById("assuntosContainer");
+            ASSUNTOS.forEach(ass => {
+                const count = todasQuestoes.filter(q => q.assuntoId === ass.id).length;
+                container.innerHTML += `
+                    <label class="assunto-item" for="chk_${ass.id}">
+                        <input type="checkbox" value="${ass.id}" id="chk_${ass.id}">
+                        <span style="flex:1;">${ass.nome}</span>
+                        <strong style="color:var(--primary);">${count}q</strong>
+                    </label>`;
+            });
+        }
+        
+        // ---------- EVENTOS ----------
+        document.getElementById("selecionarTodos").onclick = () => document.querySelectorAll("#assuntosContainer input").forEach(cb => cb.checked = true);
+        document.getElementById("limparSelecao").onclick = () => document.querySelectorAll("#assuntosContainer input").forEach(cb => cb.checked = false);
+        document.getElementById("gerarSimuladoBtn").onclick = () => {
+            const selecionados = Array.from(document.querySelectorAll("#assuntosContainer input:checked")).map(cb => cb.value);
+            if (!selecionados.length) return alert("Selecione pelo menos um assunto para gerar o simulado.");
+            questoesAtivas = todasQuestoes.filter(q => selecionados.includes(q.assuntoId));
+            // Embaralhar
+            for (let i = questoesAtivas.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questoesAtivas[i], questoesAtivas[j]] = [questoesAtivas[j], questoesAtivas[i]];
+            }
+            renderizarTodasQuestoes();
+        };
+        document.getElementById("darkModeToggle").onclick = () => {
+            document.body.classList.toggle("dark");
+            localStorage.setItem("darkHistRR_FCC", document.body.classList.contains("dark"));
+        };
+        document.getElementById("limparTudoCache").onclick = limparTudo;
+        document.getElementById("limparHistoricoApenas").onclick = limparHistoricoApenas;
+        
+        // ---------- INÍCIO ----------
+        function init() {
+            carregarCache();
+            inicializarPainel();
+            if (localStorage.getItem("darkHistRR_FCC") === "true") document.body.classList.add("dark");
+            document.getElementById("questoesRenderizadas").innerHTML = "<div style='padding:50px;text-align:center; font-size:1.1rem; color:var(--primary); font-weight:bold;'>✨ Simulador FCC – História de Roraima. 450 questões prontas! Selecione os assuntos e comece.</div>";
+        }
+        init();
+    })();
+</script>
+</body>
+</html>

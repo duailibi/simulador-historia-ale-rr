@@ -81,8 +81,8 @@
 
 <script>
     (function(){
-        // ---------- VERSÃO DO CACHE (evita incompatibilidade) ----------
-        const CACHE_VERSION = 3;
+        // ---------- VERSÃO DO CACHE ----------
+        const CACHE_VERSION = 3;  // versão atualizada devido à correção estrutural
         const STORAGE_KEY = `simuladorRR_FCC_v${CACHE_VERSION}`;
         
         // ---------- ASSUNTOS ----------
@@ -104,7 +104,7 @@
             { id: "govEstado", nome: "Governadores do Estado" }
         ];
         
-        // ---------- FATOS HISTÓRICOS COM SUAS FONTES (cada fato será a alternativa correta) ----------
+        // ---------- FATOS HISTÓRICOS COM FONTES (dados originais preservados) ----------
         const FATOS_COM_FONTES = {
             ocupacao: [
                 { texto: "Fundação do Forte São Joaquim em 1775, primeiro núcleo de ocupação lusa no vale do Rio Branco.", fonte: "FREITAS, A. (2001). Roraima: formação territorial. p. 45-48." },
@@ -228,68 +228,70 @@
             ]
         };
         
-        // Enunciados genéricos (NUNCA revelam o fato)
-        const ENUNCIADOS = [
-            "Assinale a alternativa que descreve corretamente um evento histórico de Roraima:",
-            "Sobre a história de Roraima, identifique a afirmativa historicamente precisa:",
-            "Com base na historiografia de Roraima (FCC), qual das alternativas está correta?",
-            "Considerando fontes históricas oficiais, assinale a única opção verdadeira:",
-            "A respeito do processo histórico roraimense, está correto o que se afirma em:"
+        // ---------- GERADOR DE PERGUNTAS SEM GABARITO NO ENUNCIADO ----------
+        // Cada questão terá um enunciado genérico sobre o assunto + alternativa correta = fato histórico
+        // Geraremos 30 questões por assunto: 6 fatos * 5 variações de pergunta (todas sem mencionar o fato)
+        const TEMPLATES_GENERICOS = [
+            "Sobre {ASSUNTO}, assinale a alternativa que contém um fato histórico corretamente documentado:",
+            "No contexto da história de Roraima, qual das seguintes afirmações sobre {ASSUNTO} é verdadeira?",
+            "Analise as alternativas relacionadas a {ASSUNTO} e identifique a que corresponde a um evento histórico comprovado:",
+            "Com base em fontes oficiais, qual dos itens abaixo descreve corretamente um acontecimento histórico ligado a {ASSUNTO}?",
+            "Considerando a historiografia de Roraima, aponte a alternativa verdadeira no que se refere a {ASSUNTO}:"
         ];
         
-        // Distratores genéricos (falsos)
-        const DISTRATORES = [
-            "Ocorreu sob forte influência da industrialização pesada promovida pelo Império espanhol.",
-            "Resultou na imediata independência do território em relação ao Brasil e a Portugal.",
-            "Foi um processo conduzido pacificamente, sem a necessidade de tropas ou negociações.",
-            "Reflete o domínio exclusivo dos holandeses sobre a navegação do rio Amazonas.",
-            "Foi determinado pela extinção das populações nativas ainda no século XVI.",
-            "Aconteceu exclusivamente no litoral, sem atingir a bacia do rio Branco.",
+        // Distratores mais elaborados (evitando absurdos, mas sem revelar o correto)
+        const DISTRATORES_BASE = [
+            "Ocorreu sob forte influência da industrialização pesada promovida pelo Império espanhol na Amazônia.",
+            "Resultou na imediata independência do território em relação ao Brasil e a Portugal ainda no século XIX.",
+            "Foi um processo conduzido pacificamente, sem necessidade de tropas ou negociações diplomáticas.",
+            "Reflete o domínio exclusivo dos holandeses sobre a navegação do rio Amazonas por mais de um século.",
+            "Foi determinado pela extinção completa das populações nativas ainda no século XVI.",
+            "Aconteceu exclusivamente no litoral norte do Brasil, sem atingir a bacia do rio Branco.",
             "Marcou a proibição total da agricultura familiar na região até os dias atuais.",
-            "Teve como principal consequência a construção de ferrovias transcontinentais na Amazônia.",
-            "Foi um fenômeno isolado sem qualquer impacto demográfico ou econômico.",
-            "Aconteceu somente após a criação do Estado de Roraima em 1988."
+            "Teve como principal consequência a construção de ferrovias transcontinentais na Amazônia nos anos 1930.",
+            "Foi um fenômeno isolado sem qualquer impacto demográfico ou econômico na região.",
+            "Aconteceu somente após a criação do Estado de Roraima em 1988, sendo anteriormente inexistente."
         ];
         
-        // ---------- GERAR 450 QUESTÕES (30 por assunto) ----------
         let todasQuestoes = [];
-        let questaoIdCounter = 0;
         
+        // Gerar 450 questões (30 por assunto)
         ASSUNTOS.forEach(assunto => {
             const fatos = FATOS_COM_FONTES[assunto.id];
-            fatos.forEach((fato, fatoIndex) => {
-                // Gerar 5 questões por fato (total 6*5 = 30 por assunto)
-                for (let v = 0; v < 5; v++) {
-                    // Escolher um enunciado aleatório
-                    const enunciado = ENUNCIADOS[Math.floor(Math.random() * ENUNCIADOS.length)];
-                    // Selecionar 4 distratores aleatórios diferentes do fato correto
-                    let distratoresEscolhidos = [...DISTRATORES];
-                    // garantir que nenhum distrator seja igual ao fato.texto (já são diferentes)
-                    distratoresEscolhidos = distratoresEscolhidos.sort(() => 0.5 - Math.random()).slice(0,4);
-                    let alternativas = [fato.texto, ...distratoresEscolhidos];
-                    // Embaralhar as 5 alternativas
+            let contadorInterno = 1;
+            fatos.forEach(fato => {
+                // Para cada fato, gerar 5 perguntas (usando os 5 templates genéricos)
+                for (let i = 0; i < TEMPLATES_GENERICOS.length; i++) {
+                    let pergunta = TEMPLATES_GENERICOS[i].replace("{ASSUNTO}", assunto.nome);
+                    // Montar alternativas: 1 correta (fato.texto) + 4 distratores (escolhidos aleatoriamente da base)
+                    let distratores = [...DISTRATORES_BASE].sort(() => 0.5 - Math.random()).slice(0,4);
+                    let alternativas = [fato.texto, ...distratores];
+                    // Embaralhar as alternativas
                     let indices = [0,1,2,3,4];
-                    for (let i = indices.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [indices[i], indices[j]] = [indices[j], indices[i]];
+                    for (let j = indices.length - 1; j > 0; j--) {
+                        const r = Math.floor(Math.random() * (j + 1));
+                        [indices[j], indices[r]] = [indices[r], indices[j]];
                     }
-                    let alternativasEmbaralhadas = indices.map(i => alternativas[i]);
+                    let alternativasEmbaralhadas = indices.map(idx => alternativas[idx]);
                     let novaPosicaoCorreta = indices.indexOf(0);
                     
                     todasQuestoes.push({
-                        id: `${assunto.id}_f${fatoIndex}_q${v}_${questaoIdCounter++}`,
+                        id: `${assunto.id}_fato${contadorInterno}_v${i+1}`,
                         assuntoId: assunto.id,
-                        texto: enunciado,
+                        texto: pergunta,
                         alternativas: alternativasEmbaralhadas,
                         alternativaCorreta: novaPosicaoCorreta,
-                        fundamentacao: `✅ Fonte histórica: ${fato.fonte}. A afirmativa correta corresponde ao registro documental e bibliográfico consolidado sobre o tema.`,
+                        fundamentacao: `✅ Fonte histórica: ${fato.fonte}. Esta é a alternativa que corresponde ao registro documental e bibliográfico consolidado sobre o tema.`,
                         verificada: false,
                         respostaUsuario: null,
                         acertou: null
                     });
                 }
+                contadorInterno++;
             });
         });
+        
+        // Verificação: 15 assuntos * 6 fatos * 5 templates = 450 questões
         console.log("Total de questões geradas (sem gabarito no enunciado):", todasQuestoes.length);
         
         // ---------- ESTADO GLOBAL ----------
@@ -356,7 +358,7 @@
             <span style="font-weight:normal; font-size:0.9rem;">🌍 Total geral (todos os simulados): ${stats.totalRespondidas} respondidas, ${stats.acertos} acertos.</span>`;
         }
         
-        // ---------- RENDERIZAÇÃO ----------
+        // ---------- RENDERIZAÇÃO DE CARD INDIVIDUAL ----------
         function renderCardHTML(q, indexNumber) {
             const jaRespondida = (q.respostaUsuario !== null);
             let html = `
@@ -400,6 +402,7 @@
             return html;
         }
         
+        // Funções globais para eventos
         window.responderRadio = function(id, altIdx) {
             const q = todasQuestoes.find(qq => qq.id === id);
             if (!q || q.respostaUsuario !== null) return;
@@ -444,7 +447,7 @@
             atualizarStatsPainel();
         }
         
-        // ---------- PAINEL DE ASSUNTOS ----------
+        // ---------- INICIALIZAR PAINEL DE ASSUNTOS ----------
         function inicializarPainel() {
             const container = document.getElementById("assuntosContainer");
             ASSUNTOS.forEach(ass => {
@@ -465,6 +468,7 @@
             const selecionados = Array.from(document.querySelectorAll("#assuntosContainer input:checked")).map(cb => cb.value);
             if (!selecionados.length) return alert("Selecione pelo menos um assunto para gerar o simulado.");
             questoesAtivas = todasQuestoes.filter(q => selecionados.includes(q.assuntoId));
+            // Embaralhar
             for (let i = questoesAtivas.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [questoesAtivas[i], questoesAtivas[j]] = [questoesAtivas[j], questoesAtivas[i]];

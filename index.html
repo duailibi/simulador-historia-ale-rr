@@ -82,7 +82,7 @@
 <script>
     (function(){
         // ---------- VERSÃO DO CACHE (evita incompatibilidade) ----------
-        const CACHE_VERSION = 2;
+        const CACHE_VERSION = 3;
         const STORAGE_KEY = `simuladorRR_FCC_v${CACHE_VERSION}`;
         
         // ---------- ASSUNTOS ----------
@@ -104,7 +104,7 @@
             { id: "govEstado", nome: "Governadores do Estado" }
         ];
         
-        // ---------- FATOS HISTÓRICOS (cada um com sua fonte específica) ----------
+        // ---------- FATOS HISTÓRICOS COM SUAS FONTES (cada fato será a alternativa correta) ----------
         const FATOS_COM_FONTES = {
             ocupacao: [
                 { texto: "Fundação do Forte São Joaquim em 1775, primeiro núcleo de ocupação lusa no vale do Rio Branco.", fonte: "FREITAS, A. (2001). Roraima: formação territorial. p. 45-48." },
@@ -228,13 +228,13 @@
             ]
         };
         
-        // Template de pergunta (variado)
-        const TEMPLATES_PERGUNTA = [
-            "A historiografia de Roraima (FCC) registra, sobre o tópico a seguir, que a afirmativa historicamente precisa é:",
-            "No contexto de {FATO}, assinale a alternativa correta:",
-            "Sobre o seguinte fato da história roraimense, é correto afirmar que:",
-            "Analise os eventos históricos de Roraima. Com base em fontes oficiais, o que se confirma é:",
-            "Ao estudar a formação de Roraima, destaca-se que:"
+        // Enunciados genéricos (NUNCA revelam o fato)
+        const ENUNCIADOS = [
+            "Assinale a alternativa que descreve corretamente um evento histórico de Roraima:",
+            "Sobre a história de Roraima, identifique a afirmativa historicamente precisa:",
+            "Com base na historiografia de Roraima (FCC), qual das alternativas está correta?",
+            "Considerando fontes históricas oficiais, assinale a única opção verdadeira:",
+            "A respeito do processo histórico roraimense, está correto o que se afirma em:"
         ];
         
         // Distratores genéricos (falsos)
@@ -253,20 +253,21 @@
         
         // ---------- GERAR 450 QUESTÕES (30 por assunto) ----------
         let todasQuestoes = [];
+        let questaoIdCounter = 0;
         
         ASSUNTOS.forEach(assunto => {
             const fatos = FATOS_COM_FONTES[assunto.id];
-            let contador = 1;
-            fatos.forEach(fatoObj => {
-                TEMPLATES_PERGUNTA.forEach(template => {
-                    let pergunta = template.replace("{FATO}", fatoObj.texto.split('.')[0]);
-                    if (!pergunta.includes("{FATO}")) pergunta = template + " " + fatoObj.texto;
-                    
-                    // Montar alternativas: uma correta (o fato) + 4 distratores aleatórios
-                    let distratoresEscolhidos = [...DISTRATORES].sort(() => 0.5 - Math.random()).slice(0,4);
-                    let alternativas = [fatoObj.texto, ...distratoresEscolhidos];
-                    // Embaralhar as 5 alternativas (para a correta não ficar sempre na primeira)
-                    let corretaOriginal = alternativas[0];
+            fatos.forEach((fato, fatoIndex) => {
+                // Gerar 5 questões por fato (total 6*5 = 30 por assunto)
+                for (let v = 0; v < 5; v++) {
+                    // Escolher um enunciado aleatório
+                    const enunciado = ENUNCIADOS[Math.floor(Math.random() * ENUNCIADOS.length)];
+                    // Selecionar 4 distratores aleatórios diferentes do fato correto
+                    let distratoresEscolhidos = [...DISTRATORES];
+                    // garantir que nenhum distrator seja igual ao fato.texto (já são diferentes)
+                    distratoresEscolhidos = distratoresEscolhidos.sort(() => 0.5 - Math.random()).slice(0,4);
+                    let alternativas = [fato.texto, ...distratoresEscolhidos];
+                    // Embaralhar as 5 alternativas
                     let indices = [0,1,2,3,4];
                     for (let i = indices.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
@@ -276,22 +277,20 @@
                     let novaPosicaoCorreta = indices.indexOf(0);
                     
                     todasQuestoes.push({
-                        id: `${assunto.id}_q${contador}`,
+                        id: `${assunto.id}_f${fatoIndex}_q${v}_${questaoIdCounter++}`,
                         assuntoId: assunto.id,
-                        texto: pergunta,
+                        texto: enunciado,
                         alternativas: alternativasEmbaralhadas,
                         alternativaCorreta: novaPosicaoCorreta,
-                        fundamentacao: `✅ Fonte histórica: ${fatoObj.fonte}. A afirmativa correta corresponde ao registro documental e bibliográfico consolidado sobre o tema.`,
+                        fundamentacao: `✅ Fonte histórica: ${fato.fonte}. A afirmativa correta corresponde ao registro documental e bibliográfico consolidado sobre o tema.`,
                         verificada: false,
                         respostaUsuario: null,
                         acertou: null
                     });
-                    contador++;
-                });
+                }
             });
         });
-        // Verificação: 15 assuntos * 6 fatos * 5 templates = 450 questões
-        console.log("Total de questões geradas:", todasQuestoes.length);
+        console.log("Total de questões geradas (sem gabarito no enunciado):", todasQuestoes.length);
         
         // ---------- ESTADO GLOBAL ----------
         let questoesAtivas = [];
@@ -357,7 +356,7 @@
             <span style="font-weight:normal; font-size:0.9rem;">🌍 Total geral (todos os simulados): ${stats.totalRespondidas} respondidas, ${stats.acertos} acertos.</span>`;
         }
         
-        // ---------- RENDERIZAÇÃO DE CARD INDIVIDUAL ----------
+        // ---------- RENDERIZAÇÃO ----------
         function renderCardHTML(q, indexNumber) {
             const jaRespondida = (q.respostaUsuario !== null);
             let html = `
@@ -401,14 +400,12 @@
             return html;
         }
         
-        // Funções globais para eventos
         window.responderRadio = function(id, altIdx) {
             const q = todasQuestoes.find(qq => qq.id === id);
             if (!q || q.respostaUsuario !== null) return;
             q.respostaUsuario = altIdx;
             q.acertou = (altIdx === q.alternativaCorreta);
             stats.porQuestao[q.id] = { acertou: q.acertou, resposta: altIdx };
-            // Recalcular globais
             let total = 0, acertos = 0;
             for (let k in stats.porQuestao) { total++; if (stats.porQuestao[k].acertou) acertos++; }
             stats.totalRespondidas = total;
@@ -447,7 +444,7 @@
             atualizarStatsPainel();
         }
         
-        // ---------- INICIALIZAR PAINEL DE ASSUNTOS ----------
+        // ---------- PAINEL DE ASSUNTOS ----------
         function inicializarPainel() {
             const container = document.getElementById("assuntosContainer");
             ASSUNTOS.forEach(ass => {
@@ -468,7 +465,6 @@
             const selecionados = Array.from(document.querySelectorAll("#assuntosContainer input:checked")).map(cb => cb.value);
             if (!selecionados.length) return alert("Selecione pelo menos um assunto para gerar o simulado.");
             questoesAtivas = todasQuestoes.filter(q => selecionados.includes(q.assuntoId));
-            // Embaralhar
             for (let i = questoesAtivas.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [questoesAtivas[i], questoesAtivas[j]] = [questoesAtivas[j], questoesAtivas[i]];
